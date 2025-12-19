@@ -36,3 +36,30 @@ A configurable list of words is defined to represent *soft acknowledgements* tha
 Default ignore list:
 ```text
 ["yeah", "ok", "okay", "hmm", "uh-huh", "right", "yep", "mm", "mhm"]
+```
+These words are:
+
+Ignored only when the agent is speaking
+
+Treated as valid user input when the agent is silent
+
+The list can be modified easily when initializing the handler.
+
+## State-Based Filtering
+The handler maintains a boolean state:
+
+agent_speaking = True / False
+
+### Behavior:
+
+* When agent_speaking = True
+
+Soft acknowledgements → ignored
+
+Interrupt commands or mixed sentences → interrupt
+
+* When agent_speaking = False
+
+All inputs are accepted as valid user input
+
+This ensures identical words behave differently depending on the agent’s state.
