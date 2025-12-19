@@ -52,14 +52,109 @@ agent_speaking = True / False
 
 ### Behavior:
 
-* When agent_speaking = True
+- When agent_speaking = True
 
-Soft acknowledgements → ignored
+  -  Soft acknowledgements → ignored
 
-Interrupt commands or mixed sentences → interrupt
+  -  Interrupt commands or mixed sentences → interrupt
 
-* When agent_speaking = False
-
-All inputs are accepted as valid user input
+- When agent_speaking = False
+  -  All inputs are accepted as valid user input
 
 This ensures identical words behave differently depending on the agent’s state.
+
+## Semantic Interruption Detection
+
+The handler performs semantic analysis on the STT transcript.
+
+**Rules:**
+
+- If the transcript contains any interrupt keyword, the agent is interrupted.
+
+- If the transcript contains only soft acknowledgements, it is ignored.
+
+- If the transcript contains a mix of soft acknowledgements and other words, it is treated as an interruption.
+
+### Examples:
+
+"yeah"                  → IGNORE (while speaking)
+
+"yeah wait a second"    → INTERRUPT
+
+"stop"                  → INTERRUPT
+
+
+## No VAD Kernel Modification
+
+The low-level VAD remains unchanged.
+
+Instead:
+
+The handler receives VAD events via on_vad(vad_id)
+
+- A short delay is introduced to wait for STT
+
+- The handler decides whether to interrupt before stopping playback
+
+- This keeps the solution modular and compliant with the assignment.
+
+## Decision Flow
+
+## Decision Flow
+
+- **VAD Triggered**
+- **Wait briefly for STT (~100 ms)**
+- **Check agent speaking state**
+- **Analyze STT semantics**
+- **Final Decision**
+  - IGNORE
+  - ACCEPT
+  - INTERRUPT
+
+
+If STT does not arrive within the timeout:
+
+- While speaking → IGNORE (safe default)
+
+- While silent → no action
+
+
+## Code Structure
+
+**Core Class: InterruptHandler**
+
+### Responsibilities:
+
+- Track agent speaking state
+
+- Handle VAD events
+
+- Handle STT results
+
+- Apply interruption decision rules
+
+## Tokenization Strategy
+
+- All text is converted to lowercase
+
+- Split on non-alphanumeric characters
+
+- Tokens are matched against:
+
+  - Soft acknowledgement set
+
+  - Interrupt keyword set
+
+- This avoids errors due to punctuation or casing.
+
+## Conclusion
+
+This implementation correctly solves the problem of intelligent interruption handling by combining:
+
+- Agent state awareness
+
+- Semantic understanding of user speech
+
+- Minimal and safe integration with existing VAD systems
+
+The solution is modular, configurable, and fully compliant with the assignment requirements.
